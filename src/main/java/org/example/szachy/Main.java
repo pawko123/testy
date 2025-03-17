@@ -39,10 +39,11 @@ public class Main {
                 String piece = scanner.next();
                 if(piece.equals("showValidMoves")){
                     Map<String, List<String>> validMoves = board.availableMoves();
+                    List<String> uniqueMoves = board.allUniqueAvailableMoves(validMoves);
                     for(Map.Entry<String, List<String>> entry : validMoves.entrySet()){
                         System.out.println("Piece on field " + entry.getKey() + " can move to fields:" + entry.getValue());
-
                     }
+                    System.out.println("All unique moves: " + uniqueMoves);
                     gonext = true;
                     continue;
                 }

@@ -13,7 +13,7 @@ public class BoardState {
         if(size > 26){
             throw new IllegalArgumentException("Size must be less than 27");
         }
-        this.board = new HashMap<String, String>();
+        this.board = new HashMap<>();
         char letter = 'a';
         for(int i = 1; i <= size; i++){
             for(int j = 1; j <= size; j++){
@@ -26,6 +26,7 @@ public class BoardState {
     public void setField(String userInput){
         String pieceLetter = userInput.substring(0, 1);
         String pieceField = userInput.substring(1);
+
         if(Arrays.stream(allowedPieces).noneMatch(pieceLetter::equals)){
             throw new IllegalArgumentException("Piece not allowed");
         }
@@ -37,8 +38,8 @@ public class BoardState {
 
     public Map<String, List<String>> availableMoves(){
         //find knight on board
-        List<String> knightFields = new ArrayList<String>();
-        Map<String, List<String>> viableMoves = new HashMap<String, List<String>>();
+        List<String> knightFields = new ArrayList<>();
+        Map<String, List<String>> viableMoves = new HashMap<>();
         for(Map.Entry<String, String> entry : this.board.entrySet()){
             if(entry.getValue().equals("k")){
                 knightFields.add(entry.getKey());
@@ -48,7 +49,7 @@ public class BoardState {
             throw new IllegalArgumentException("There is no knight on the board");
         }
         for(String knightField : knightFields){
-            List<String> viableMovesForPiece = new ArrayList<String>();
+            List<String> viableMovesForPiece = new ArrayList<>();
             //find all possible moves
             char letter = knightField.charAt(0);
             int number = Integer.parseInt(knightField.substring(1));
@@ -71,6 +72,18 @@ public class BoardState {
             viableMoves.put(knightField, viableMovesForPiece);
         }
         return viableMoves;
+    }
+
+    public List<String> allUniqueAvailableMoves(Map<String, List<String>> availableMoves){
+        List<String> allMoves = new ArrayList<>();
+        for(Map.Entry<String, List<String>> entry : availableMoves.entrySet()){
+            for(String move : entry.getValue()){
+                if(!allMoves.contains(move)){
+                    allMoves.add(move);
+                }
+            }
+        }
+        return allMoves;
     }
 
     public boolean isFieldValid(String fieldname){
