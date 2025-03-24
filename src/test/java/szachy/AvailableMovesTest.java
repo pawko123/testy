@@ -38,18 +38,32 @@ public class AvailableMovesTest {
     }
 
     @Test
-    public void testAvailableMovesWithObstacle() {
+    public void testAvailableMovesSize1() {
+        // given
+        BoardState boardState = new BoardState(1);
+        // when
+        boardState.setField("ka1");
+
+        Map<String, List<String>> moves = boardState.availableMoves();
+        // then
+        assertThat(moves.size(), is(1));
+        assertThat(moves.get("a1"),hasSize(0));
+    }
+
+    @Test
+    public void testAvailableMovesWithObstacleSize8() {
         // given
         BoardState boardState = new BoardState(8);
         // when
         boardState.setField("kd1");
         boardState.setField("pc3");
+        boardState.setField("pe3");
 
         Map<String, List<String>> moves = boardState.availableMoves();
         // then
         assertThat(moves.size(), is(1));
-        assertThat(moves.get("d1"), containsInAnyOrder("b2", "f2", "e3"));
-        assertThat(moves.get("d1"), hasSize(3));
+        assertThat(moves.get("d1"), containsInAnyOrder("b2", "f2"));
+        assertThat(moves.get("d1"), hasSize(2));
     }
 
     @Test
