@@ -11,7 +11,6 @@ public class GameLoop {
         this.game = game;
         this.scanner = new Scanner(System.in);
     }
-
     public void startGame() {
         System.out.println("Welcome to Mastermind!");
         System.out.println("Try to guess the secret code. Valid colors are: R, G, B, Y, O, P");
