@@ -5,13 +5,13 @@ import java.util.Scanner;
 
 public class GameLoop {
     private final GameState game;
-    private final Scanner scanner;
+    private Scanner scanner;
 
     public GameLoop(GameState game){
         this.game = game;
-        this.scanner = new Scanner(System.in);
     }
     public void startGame() {
+        this.scanner = new Scanner(System.in);
         System.out.println("Welcome to Mastermind!");
         System.out.println("Try to guess the secret code. Valid colors are: R, G, B, Y, O, P");
         System.out.println("The code is " + game.getSecretCode().length() + " characters long.");
@@ -57,5 +57,9 @@ public class GameLoop {
                         "Code: " + result.getCode());
             }
         }
+    }
+
+    public GameState getGame() {
+        return game;
     }
 }

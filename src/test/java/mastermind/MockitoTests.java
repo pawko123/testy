@@ -188,13 +188,11 @@ public class MockitoTests {
     // <editor-fold desc="GameLoop Tests">
     @Test
     public void gameLoopWonTest() {
-
-        /* do wlasnej implementacji
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outputStream));
         String simulatedInput = "ROPYG\n";
         System.setIn(new java.io.ByteArrayInputStream(simulatedInput.getBytes()));
-        */
+
 
         CodeService codeService = mock(CodeService.class);
         when(codeService.generateCode(5)).thenReturn("ROPYG");
@@ -207,16 +205,44 @@ public class MockitoTests {
         // Verify the output
 
         //:TODO intercept output
-        /*
         assertTrue(outputStream.toString().contains("""
-                Welcome to Mastermind!\r
-                Try to guess the secret code. Valid colors are: R, G, B, Y, O, P\r
-                The code is 5 characters long.\r
-                You have 10 attempts.\r
+                Welcome to Mastermind!
+                Try to guess the secret code. Valid colors are: R, G, B, Y, O, P
+                The code is 5 characters long.
+                You have 10 attempts.
                 """));
 
         assertTrue(outputStream.toString().contains("Congratulations! You guessed the code!"));
-        */
+    }
+
+    @Test
+    public void gameLoopLostTest() throws DatabaseException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outputStream));
+        String simulatedInput = "ROYYG\nROYYG\n";
+        System.setIn(new java.io.ByteArrayInputStream(simulatedInput.getBytes()));
+
+        CodeService codeService = mock(CodeService.class);
+        when(codeService.generateCode(5)).thenReturn("ROPYG");
+        when(codeService.checkGuess(any(String.class),any(String.class))).
+                thenReturn(new Guess("++-++",false));
+
+        DatabaseService databaseService = mock(DatabaseService.class);
+
+
+        GameLoop gameLoop = new GameLoop(new GameState(5, 2,
+                databaseService, codeService));
+
+        gameLoop.startGame();
+
+        assertTrue(outputStream.toString().contains("Game over! The secret code was: ROPYG"));
+        assertThat(gameLoop.getGame().isGameOver(), Matchers.equalTo(true));
+        assertThat(gameLoop.getGame().isGameWon(), Matchers.equalTo(false));
+        verify(codeService,times(1)).generateCode(5);
+        verify(codeService,times(2)).checkGuess(any(String.class),any(String.class));
+        verify(databaseService,times(0)).saveGameResult(any(GameResult.class));
+        verify(databaseService,times(1)).getTopResults(3);
+
     }
     // </editor-fold>
 }
