@@ -11,6 +11,7 @@ import java.io.PrintStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -56,6 +57,21 @@ public class MockitoTests {
         assertTrue(gamestate.isGameOver());
         assertEquals(1,gamestate.getCurrentAttempt());
         verify(databaseService,times(0)).saveGameResult(any(GameResult.class));
+    }
+    @Test
+    public void illegalArgumentGiven() throws Exception{
+        CodeService codeService = mock(CodeService.class);
+        when(codeService.generateCode(5)).thenReturn("ROPYG");
+
+        DatabaseService databaseService = mock(DatabaseService.class);
+
+        GameState gamestate = new GameState(5,10,databaseService,codeService);
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            gamestate.makeGuess("ROYYGG");
+        });
+
+        assertEquals("Guess must be 5 characters long", exception.getMessage());
     }
     // </editor-fold>
 
@@ -191,7 +207,8 @@ public class MockitoTests {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outputStream));
         String simulatedInput = "ROPYG\n";
-        System.setIn(new java.io.ByteArrayInputStream(simulatedInput.getBytes()));
+        Scanner mockedScanner = mock(Scanner.class);
+        when(mockedScanner.nextLine()).thenReturn(simulatedInput);
 
 
         CodeService codeService = mock(CodeService.class);
@@ -199,7 +216,7 @@ public class MockitoTests {
         when(codeService.checkGuess(any(String.class),any(String.class))).
                 thenReturn(new Guess("+++++",true));
         GameLoop gameLoop = new GameLoop(new GameState(5, 10,
-                mock(DatabaseService.class), codeService));
+                mock(DatabaseService.class), codeService), mockedScanner);
 
         gameLoop.startGame();
         // Verify the output
@@ -212,6 +229,7 @@ public class MockitoTests {
                 You have 10 attempts.
                 """));
 
+        verify(mockedScanner,times(1)).nextLine();
         assertTrue(outputStream.toString().contains("Congratulations! You guessed the code!"));
     }
 
@@ -219,8 +237,9 @@ public class MockitoTests {
     public void gameLoopLostTest() throws DatabaseException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outputStream));
-        String simulatedInput = "ROYYG\nROYYG\n";
-        System.setIn(new java.io.ByteArrayInputStream(simulatedInput.getBytes()));
+        String simulatedInput = "ROYYG\n";
+        Scanner mockedScanner = mock(Scanner.class);
+        when(mockedScanner.nextLine()).thenReturn(simulatedInput);
 
         CodeService codeService = mock(CodeService.class);
         when(codeService.generateCode(5)).thenReturn("ROPYG");
@@ -231,18 +250,46 @@ public class MockitoTests {
 
 
         GameLoop gameLoop = new GameLoop(new GameState(5, 2,
-                databaseService, codeService));
+                databaseService, codeService),mockedScanner);
 
         gameLoop.startGame();
 
         assertTrue(outputStream.toString().contains("Game over! The secret code was: ROPYG"));
         assertThat(gameLoop.getGame().isGameOver(), Matchers.equalTo(true));
         assertThat(gameLoop.getGame().isGameWon(), Matchers.equalTo(false));
+        verify(mockedScanner,times(2)).nextLine();
         verify(codeService,times(1)).generateCode(5);
         verify(codeService,times(2)).checkGuess(any(String.class),any(String.class));
         verify(databaseService,times(0)).saveGameResult(any(GameResult.class));
         verify(databaseService,times(1)).getTopResults(3);
 
+    }
+
+    @Test
+    public void gameLoopWithIllegalGuess(){
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outputStream));
+        Scanner mockedScanner = mock(Scanner.class);
+        when(mockedScanner.nextLine()).thenReturn("ROYYGG","ROPYG");
+
+
+        CodeService codeService = mock(CodeService.class);
+        when(codeService.generateCode(5)).thenReturn("ROPYG");
+        when(codeService.checkGuess("ROPYG","ROPYG")).
+                thenReturn(new Guess("+++++",true));
+        DatabaseService databaseService = mock(DatabaseService.class);
+
+        GameLoop gameLoop = new GameLoop(new GameState(5, 1,
+                databaseService, codeService),mockedScanner);
+
+        gameLoop.startGame();
+
+
+        assertThat(gameLoop.getGame().isGameOver(), Matchers.equalTo(true));
+        assertThat(gameLoop.getGame().isGameWon(), Matchers.equalTo(true));
+        assertThat(gameLoop.getGame().getCurrentAttempt(), Matchers.equalTo(1));
+        verify(mockedScanner,times(2)).nextLine();
+        assertThat(outputStream.toString().contains("Invalid input: Guess must be 5 characters long"), Matchers.equalTo(true));
     }
     // </editor-fold>
 }

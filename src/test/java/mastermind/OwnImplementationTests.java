@@ -105,7 +105,8 @@ public class OwnImplementationTests {
         assertEquals(result2, results.getLast());
     }
 
-    @Test void testInsideGameLoopWin(){
+    @Test
+    public void testInsideGameLoopWin(){
         CodeImplementation codeService = new CodeImplementation();
         DatabaseImplementation databaseService = new DatabaseImplementation();
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -134,6 +135,33 @@ public class OwnImplementationTests {
         System.setIn(System.in);
         System.setOut(System.out);
 
+    }
+
+    @Test
+    public void testInsideGameLoopLose(){
+        CodeImplementation codeService = new CodeImplementation();
+        DatabaseImplementation databaseService = new DatabaseImplementation();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outputStream));
+
+        GameLoop gameLoop = new GameLoop(new GameState(5,1,databaseService,codeService));
+        String secret = gameLoop.getGame().getSecretCode();
+        String simulatedInput =   "RRRRR\n";
+
+        System.setIn(new java.io.ByteArrayInputStream(simulatedInput.getBytes()));
+
+        gameLoop.startGame();
+
+        List<GameResult> results = databaseService.getTopResults(2);
+
+        assertTrue(gameLoop.getGame().isGameOver());
+        assertFalse(gameLoop.getGame().isGameWon());
+        assertTrue(outputStream.toString().contains("Game over! The secret code was: "+secret));
+
+        assertEquals(0, results.size());
+
+        System.setIn(System.in);
+        System.setOut(System.out);
     }
 
 
