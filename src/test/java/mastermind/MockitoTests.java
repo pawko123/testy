@@ -5,6 +5,7 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.*;
 import org.hamcrest.Matchers.*;
+import org.mockito.ArgumentCaptor;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -204,8 +205,8 @@ public class MockitoTests {
     // <editor-fold desc="GameLoop Tests">
     @Test
     public void gameLoopWonTest() {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(outputStream));
+        PrintStream mockedPrintStream = mock(PrintStream.class);
+        System.setOut(mockedPrintStream);
         String simulatedInput = "ROPYG\n";
         Scanner mockedScanner = mock(Scanner.class);
         when(mockedScanner.nextLine()).thenReturn(simulatedInput);
@@ -220,23 +221,26 @@ public class MockitoTests {
 
         gameLoop.startGame();
         // Verify the output
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(mockedPrintStream, atLeastOnce()).println(captor.capture());
+        List<String> capturedOutput = captor.getAllValues();
 
         //:TODO intercept output
-        assertTrue(outputStream.toString().contains("""
-                Welcome to Mastermind!
-                Try to guess the secret code. Valid colors are: R, G, B, Y, O, P
-                The code is 5 characters long.
-                You have 10 attempts.
-                """));
+        assertTrue(capturedOutput.contains("Welcome to Mastermind!"));
+        assertTrue(capturedOutput.contains("Try to guess the secret code. Valid colors are: R, G, B, Y, O, P"));
+        assertTrue(capturedOutput.contains("The code is 5 characters long."));
+        assertTrue(capturedOutput.contains("You have 10 attempts."));
 
         verify(mockedScanner,times(1)).nextLine();
-        assertTrue(outputStream.toString().contains("Congratulations! You guessed the code!"));
+        assertTrue(capturedOutput.contains("Congratulations! You guessed the code!"));
+
+        System.setOut(System.out);
     }
 
     @Test
     public void gameLoopLostTest() throws DatabaseException {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(outputStream));
+        PrintStream mockedPrintStream = mock(PrintStream.class);
+        System.setOut(mockedPrintStream);
         String simulatedInput = "ROYYG\n";
         Scanner mockedScanner = mock(Scanner.class);
         when(mockedScanner.nextLine()).thenReturn(simulatedInput);
@@ -254,7 +258,12 @@ public class MockitoTests {
 
         gameLoop.startGame();
 
-        assertTrue(outputStream.toString().contains("Game over! The secret code was: ROPYG"));
+        // Verify the output
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(mockedPrintStream, atLeastOnce()).println(captor.capture());
+        List<String> capturedOutput = captor.getAllValues();
+
+        assertTrue(capturedOutput.contains("Game over! The secret code was: ROPYG"));
         assertThat(gameLoop.getGame().isGameOver(), Matchers.equalTo(true));
         assertThat(gameLoop.getGame().isGameWon(), Matchers.equalTo(false));
         verify(mockedScanner,times(2)).nextLine();
@@ -263,12 +272,14 @@ public class MockitoTests {
         verify(databaseService,times(0)).saveGameResult(any(GameResult.class));
         verify(databaseService,times(1)).getTopResults(3);
 
+        System.setOut(System.out);
+
     }
 
     @Test
     public void gameLoopWithIllegalGuess(){
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(outputStream));
+        PrintStream mockedPrintStream = mock(PrintStream.class);
+        System.setOut(mockedPrintStream);
         Scanner mockedScanner = mock(Scanner.class);
         when(mockedScanner.nextLine()).thenReturn("ROYYGG","ROPYG");
 
@@ -285,11 +296,18 @@ public class MockitoTests {
         gameLoop.startGame();
 
 
+        // Verify the output
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(mockedPrintStream, atLeastOnce()).println(captor.capture());
+        List<String> capturedOutput = captor.getAllValues();
+
         assertThat(gameLoop.getGame().isGameOver(), Matchers.equalTo(true));
         assertThat(gameLoop.getGame().isGameWon(), Matchers.equalTo(true));
         assertThat(gameLoop.getGame().getCurrentAttempt(), Matchers.equalTo(1));
         verify(mockedScanner,times(2)).nextLine();
-        assertThat(outputStream.toString().contains("Invalid input: Guess must be 5 characters long"), Matchers.equalTo(true));
+        assertThat(capturedOutput.contains("Invalid input: Guess must be 5 characters long"), Matchers.equalTo(true));
+
+        System.setOut(System.out);
     }
     // </editor-fold>
 }

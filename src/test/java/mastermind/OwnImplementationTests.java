@@ -163,6 +163,4 @@ public class OwnImplementationTests {
         System.setIn(System.in);
         System.setOut(System.out);
     }
-
-
 }
