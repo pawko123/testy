@@ -131,6 +131,8 @@ public class OwnImplementationTests {
 
         assertEquals(1, results.size());
 
+        assertTrue(outputStream.toString().contains("1. Won in 1 attempts, Code: "+secret));
+
 
         System.setIn(System.in);
         System.setOut(System.out);
@@ -157,6 +159,7 @@ public class OwnImplementationTests {
         assertTrue(gameLoop.getGame().isGameOver());
         assertFalse(gameLoop.getGame().isGameWon());
         assertTrue(outputStream.toString().contains("Game over! The secret code was: "+secret));
+        assertFalse(outputStream.toString().contains("1. Won in 1 attempts, Code: "+secret));
 
         assertEquals(0, results.size());
 

@@ -8,6 +8,7 @@ import org.hamcrest.Matchers.*;
 import org.mockito.ArgumentCaptor;
 
 import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -309,5 +310,51 @@ public class MockitoTests {
 
         System.setOut(System.out);
     }
+
+    @Test
+    public void gameLoopWithDBExceptions() throws DatabaseException {
+        PrintStream mockedPrintStream = mock(PrintStream.class);
+        PrintStream outputStream = System.out;
+        System.setOut(mockedPrintStream);
+        String simulatedInput = "ROPYG\n";
+        Scanner mockedScanner = mock(Scanner.class);
+        when(mockedScanner.nextLine()).thenReturn(simulatedInput);
+
+        DatabaseService databaseService = mock(DatabaseService.class);
+        when(databaseService.getTopResults(any(Integer.class))).thenThrow(new DatabaseException("Database load failed"));
+        doThrow(new DatabaseException("Database save failed"))
+                .when(databaseService).saveGameResult(any(GameResult.class));
+
+
+        CodeService codeService = mock(CodeService.class);
+        when(codeService.generateCode(5)).thenReturn("ROPYG");
+        when(codeService.checkGuess(any(String.class),any(String.class))).
+                thenReturn(new Guess("+++++",true));
+        GameLoop gameLoop = new GameLoop(new GameState(5, 10,
+                databaseService, codeService), mockedScanner);
+
+        gameLoop.startGame();
+        // Verify the output
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(mockedPrintStream, atLeastOnce()).println(captor.capture());
+        List<String> capturedOutput = captor.getAllValues();
+
+        System.setOut(outputStream);
+
+        assertTrue(capturedOutput.contains("Welcome to Mastermind!"));
+        assertTrue(capturedOutput.contains("Try to guess the secret code. Valid colors are: R, G, B, Y, O, P"));
+        assertTrue(capturedOutput.contains("The code is 5 characters long."));
+        assertTrue(capturedOutput.contains("You have 10 attempts."));
+
+        verify(mockedScanner,times(1)).nextLine();
+        assertTrue(capturedOutput.contains("Congratulations! You guessed the code!"));
+
+        verify(databaseService,times(1)).getTopResults(3);
+        verify(databaseService,times(1)).saveGameResult(any(GameResult.class));
+        assertTrue(capturedOutput.contains("Failed to retrieve top results"));
+        assertTrue(capturedOutput.contains("Failed to save game result"));
+
+    }
+
     // </editor-fold>
 }

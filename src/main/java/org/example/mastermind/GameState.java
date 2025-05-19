@@ -56,18 +56,18 @@ public class GameState {
             LocalDateTime date = LocalDateTime.now();
             GameResult result = new GameResult(attempts, secretCode, date);
             databaseService.saveGameResult(result);
-        } catch (Exception e) {
-            System.err.println("Failed to save game result: " + e.getMessage());
+        } catch (DatabaseException e) {
+            System.out.println("Failed to save game result");
         }
     }
 
     public List<GameResult> getTopResults() {
         try {
             return databaseService.getTopResults(3);
-        } catch (Exception e) {
-            System.err.println("Failed to retrieve top results: " + e.getMessage());
-            return new ArrayList<>();
+        } catch (DatabaseException e) {
+            System.out.println("Failed to retrieve top results");
         }
+        return new ArrayList<>();
     }
 
     public String getSecretCode() {
