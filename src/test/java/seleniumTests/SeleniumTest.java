@@ -17,7 +17,7 @@ public class SeleniumTest {
     @BeforeEach
     public void setUp() {
         System.setProperty("webdriver.gecko.driver",
-                "C:\\Users\\games\\OneDrive\\Pulpit\\Studia\\rozproszone\\testy\\Driver\\geckodriver.exe");
+                System.getProperty("user.dir") + "\\Driver\\geckodriver.exe");
         driver = new FirefoxDriver();
         js = (JavascriptExecutor) driver;
         vars = new HashMap<String, Object>();
